@@ -1,0 +1,1791 @@
+<meta name='viewport' content='width=device-width, initial-scale=1'/><meta name='viewport' content='width=device-width, initial-scale=1'/><!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inventory & Reporting Management System</title>
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <!-- jsPDF & html2canvas -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+
+        /* Navigation Scrollbar */
+        .nav-scroll::-webkit-scrollbar {
+            display: none;
+        }
+        .nav-scroll {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        /* Autocomplete Dropdown */
+        .autocomplete-items {
+            position: absolute;
+            border: 1px solid #d4d4d4;
+            border-bottom: none;
+            border-top: none;
+            z-index: 99;
+            top: 100%;
+            left: 0;
+            right: 0;
+            border-radius: 0 0 0.375rem 0.375rem;
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+        .autocomplete-items div {
+            padding: 10px;
+            cursor: pointer;
+            background-color: #fff; 
+            border-bottom: 1px solid #d4d4d4; 
+        }
+        .autocomplete-items div:hover {
+            background-color: #e9e9e9; 
+        }
+
+        /* Print Styles */
+        @media print {
+            .no-print { display: none !important; }
+            .print-only { display: block !important; }
+            body { background: white; }
+            .shadow-lg, .shadow-md { box-shadow: none !important; }
+        }
+        
+        .fade-in {
+            animation: fadeIn 0.3s ease-in-out;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* DO Range Report Specific Styles */
+        .do-range-row:nth-child(even) {
+            background-color: #f8fafc;
+        }
+        .do-range-row:hover {
+            background-color: #f1f5f9;
+        }
+        .do-missing {
+            background-color: #fee2e2 !important;
+            color: #991b1b;
+        }
+
+        /* PDF Optimized Styles */
+        .pdf-container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        
+        .pdf-table {
+            font-size: 10px;
+        }
+        
+        .pdf-table th,
+        .pdf-table td {
+            padding: 4px 6px;
+        }
+
+        /* ===== DARK MODE ===== */
+        body.dark-mode {
+            background-color: #0f172a;
+            color: #e2e8f0;
+        }
+        body.dark-mode nav {
+            background-color: #1e293b;
+            border-bottom: 1px solid #334155;
+        }
+        body.dark-mode main {
+            background-color: #0f172a;
+        }
+        body.dark-mode .bg-white {
+            background-color: #1e293b !important;
+            color: #e2e8f0;
+        }
+        body.dark-mode .bg-gray-50 {
+            background-color: #1e293b !important;
+        }
+        body.dark-mode .bg-gray-100 {
+            background-color: #334155 !important;
+        }
+        body.dark-mode .text-gray-800, body.dark-mode .text-gray-900 { color: #f1f5f9 !important; }
+        body.dark-mode .text-gray-700 { color: #cbd5e1 !important; }
+        body.dark-mode .text-gray-600 { color: #94a3b8 !important; }
+        body.dark-mode .text-gray-500 { color: #64748b !important; }
+        body.dark-mode .border-gray-200 { border-color: #334155 !important; }
+        body.dark-mode .border-gray-100 { border-color: #1e293b !important; }
+        body.dark-mode .border-gray-300 { border-color: #475569 !important; }
+        body.dark-mode input, body.dark-mode select, body.dark-mode textarea {
+            background-color: #0f172a !important;
+            color: #e2e8f0 !important;
+            border-color: #475569 !important;
+        }
+        body.dark-mode .autocomplete-items div {
+            background-color: #1e293b;
+            color: #e2e8f0;
+            border-color: #334155;
+        }
+        body.dark-mode .autocomplete-items div:hover { background-color: #334155; }
+        body.dark-mode .hover\:bg-gray-50:hover { background-color: #334155 !important; }
+        body.dark-mode .divide-gray-100 > * { border-color: #334155 !important; }
+        body.dark-mode .divide-gray-200 > * { border-color: #334155 !important; }
+        body.dark-mode .shadow-md, body.dark-mode .shadow-sm, body.dark-mode .shadow-lg {
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.5) !important;
+        }
+        body.dark-mode .do-range-row:nth-child(even) { background-color: #162032 !important; }
+        body.dark-mode .do-range-row:hover { background-color: #334155 !important; }
+        body.dark-mode .nav-btn.text-blue-600 { background-color: #1e3a5f !important; }
+
+        /* Dark Mode Toggle Switch */
+        .toggle-switch { position: relative; display: inline-block; width: 52px; height: 28px; }
+        .toggle-switch input { opacity: 0; width: 0; height: 0; }
+        .toggle-slider {
+            position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1; border-radius: 28px; transition: 0.3s;
+        }
+        .toggle-slider:before {
+            position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px;
+            background-color: white; border-radius: 50%; transition: 0.3s;
+        }
+        input:checked + .toggle-slider { background-color: #3b82f6; }
+        input:checked + .toggle-slider:before { transform: translateX(24px); }
+    </style>
+</head>
+<body class="text-gray-800 h-screen flex flex-col overflow-hidden">
+
+    <!-- Navigation -->
+    <nav class="bg-white shadow-md z-20 no-print flex-shrink-0">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16 items-center">
+                <div class="flex items-center flex-shrink-0">
+                    <div class="flex items-center text-blue-600">
+                        <i class="fa-solid fa-boxes-stacked text-2xl mr-2"></i>
+                        <span class="font-bold text-xl tracking-tight hidden sm:block">InvManager</span>
+                    </div>
+                </div>
+                <div class="flex-1 ml-4 overflow-x-auto nav-scroll">
+                    <div class="flex space-x-1 min-w-max">
+                        <button onclick="switchTab('dashboard')" id="nav-dashboard" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-blue-600 bg-blue-50 hover:bg-blue-100 transition whitespace-nowrap">
+                            <i class="fa-solid fa-chart-line mr-1"></i> Dashboard
+                        </button>
+                        <button onclick="switchTab('entry')" id="nav-entry" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition whitespace-nowrap">
+                            <i class="fa-solid fa-pen-to-square mr-1"></i> Data Entry
+                        </button>
+                        <button onclick="switchTab('reports')" id="nav-reports" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition whitespace-nowrap">
+                            <i class="fa-solid fa-file-invoice mr-1"></i> Reports
+                        </button>
+                        <button onclick="switchTab('doRange')" id="nav-doRange" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition whitespace-nowrap">
+                            <i class="fa-solid fa-list-ol mr-1"></i> DO Range
+                        </button>
+                        <button onclick="switchTab('settings')" id="nav-settings" class="nav-btn px-3 py-2 rounded-md text-sm font-medium text-gray-600 hover:text-gray-900 hover:bg-gray-50 transition whitespace-nowrap">
+                            <i class="fa-solid fa-gear mr-1"></i> Settings
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="flex-1 overflow-y-auto bg-gray-50 p-4 sm:p-8 relative">
+        
+        <!-- DASHBOARD SECTION -->
+        <section id="dashboard-section" class="max-w-7xl mx-auto fade-in">
+            <h2 class="text-2xl font-bold text-gray-800 mb-6">Dashboard Overview</h2>
+            
+            <!-- Stats Grid -->
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-blue-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Total Entries</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-1" id="dash-total-entries">0</h3>
+                        </div>
+                        <div class="p-2 bg-blue-100 rounded-lg text-blue-600">
+                            <i class="fa-solid fa-list-ol text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-emerald-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Total Net Quantity</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-1" id="dash-total-qty">0</h3>
+                        </div>
+                        <div class="p-2 bg-emerald-100 rounded-lg text-emerald-600">
+                            <i class="fa-solid fa-scale-balanced text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-purple-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Today's Entries</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-1" id="dash-today-entries">0</h3>
+                            <p class="text-xs text-gray-400 mt-1">Qty: <span id="dash-today-qty">0</span></p>
+                        </div>
+                        <div class="p-2 bg-purple-100 rounded-lg text-purple-600">
+                            <i class="fa-solid fa-calendar-day text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-orange-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Unique Customers</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-1" id="dash-total-customers">0</h3>
+                        </div>
+                        <div class="p-2 bg-orange-100 rounded-lg text-orange-600">
+                            <i class="fa-solid fa-users text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-pink-500">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Active Products</p>
+                            <h3 class="text-3xl font-bold text-gray-800 mt-1" id="dash-total-products">0</h3>
+                        </div>
+                        <div class="p-2 bg-pink-100 rounded-lg text-pink-600">
+                            <i class="fa-solid fa-tags text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Missing DO Finder Card -->
+                <div class="bg-white rounded-xl shadow-sm p-6 border-l-4 border-red-500 cursor-pointer hover:shadow-md transition" onclick="openMissingDOModal()">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="text-sm font-medium text-gray-500">Missing DO Finder</p>
+                            <h3 class="text-lg font-bold text-gray-800 mt-1">Find Gaps</h3>
+                            <p class="text-xs text-gray-400 mt-1">Click to check missing DO numbers</p>
+                        </div>
+                        <div class="p-2 bg-red-100 rounded-lg text-red-600">
+                            <i class="fa-solid fa-magnifying-glass text-xl"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts -->
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="text-lg font-semibold mb-4">Product Wise Quantity</h3>
+                    <canvas id="chartProduct"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm">
+                    <h3 class="text-lg font-semibold mb-4">Customer Wise Quantity</h3>
+                    <canvas id="chartCustomer"></canvas>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-sm lg:col-span-2">
+                    <h3 class="text-lg font-semibold mb-4">Monthly Entry Trend</h3>
+                    <canvas id="chartMonthly"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- MISSING DO MODAL -->
+        <div id="missingDOModal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden flex items-center justify-center p-4">
+            <div class="bg-white rounded-xl shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+                <div class="p-6 border-b border-gray-200 flex justify-between items-center">
+                    <div>
+                        <h3 class="text-xl font-bold text-gray-800">Missing DO Finder</h3>
+                        <p class="text-sm text-gray-500">Find gaps in your DO number sequence</p>
+                    </div>
+                    <button onclick="closeMissingDOModal()" class="text-gray-400 hover:text-gray-600">
+                        <i class="fa-solid fa-xmark text-xl"></i>
+                    </button>
+                </div>
+                
+                <div class="p-6 overflow-y-auto flex-1">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">From DO Number</label>
+                            <input type="text" id="missingDOFrom" placeholder="e.g. 101" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">To DO Number</label>
+                            <input type="text" id="missingDOTo" placeholder="e.g. 200" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none">
+                        </div>
+                        <div class="flex items-end">
+                            <button onclick="findMissingDOs()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium">
+                                <i class="fa-solid fa-search mr-1"></i> Find Missing
+                            </button>
+                        </div>
+                    </div>
+
+                    <div id="missingDOResults" class="hidden">
+                        <div class="flex justify-between items-center mb-4">
+                            <h4 class="font-semibold text-gray-800">Missing DO Numbers</h4>
+                            <span class="text-sm text-gray-500" id="missingDOCount">0 missing</span>
+                        </div>
+                        
+                        <div class="bg-red-50 border border-red-200 rounded-lg p-4 mb-4">
+                            <div id="missingDOList" class="flex flex-wrap gap-2">
+                                <!-- Missing DO numbers will appear here as badges -->
+                            </div>
+                        </div>
+
+                        <div class="bg-gray-50 rounded-lg p-4">
+                            <h5 class="font-medium text-gray-700 mb-2">Summary</h5>
+                            <div class="grid grid-cols-3 gap-4 text-sm">
+                                <div>
+                                    <span class="text-gray-500">Total in Range:</span>
+                                    <span class="font-bold text-gray-800 ml-1" id="missingDOTotal">0</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Found:</span>
+                                    <span class="font-bold text-emerald-600 ml-1" id="missingDOFound">0</span>
+                                </div>
+                                <div>
+                                    <span class="text-gray-500">Missing:</span>
+                                    <span class="font-bold text-red-600 ml-1" id="missingDOMissing">0</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="missingDOEmpty" class="text-center py-8 text-gray-400">
+                        <i class="fa-solid fa-clipboard-question text-4xl mb-2"></i>
+                        <p>Enter a DO range to find missing numbers</p>
+                    </div>
+                </div>
+                
+                <div class="p-4 border-t border-gray-200 bg-gray-50 flex justify-end space-x-2">
+                    <button onclick="exportMissingDOToCSV()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-white transition text-sm">
+                        <i class="fa-solid fa-file-csv mr-1 text-green-600"></i> Export List
+                    </button>
+                    <button onclick="closeMissingDOModal()" class="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition text-sm">
+                        Close
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- DATA ENTRY SECTION -->
+        <section id="entry-section" class="max-w-7xl mx-auto hidden fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                
+                <!-- Entry Form -->
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-md p-6 sticky top-0">
+                        <h2 class="text-xl font-bold text-gray-800 mb-4 flex items-center">
+                            <i class="fa-solid fa-plus-circle mr-2 text-blue-600"></i> New Entry
+                        </h2>
+                        <form id="entryForm" onsubmit="handleEntrySubmit(event)">
+                            <input type="hidden" id="entryId">
+                            
+                            <div class="space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Date</label>
+                                    <input type="date" id="entryDate" required class="w-full rounded-lg border-gray-300 border px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">DO Number</label>
+                                    <input type="text" id="entryDO" placeholder="e.g. DO-1001" required class="w-full rounded-lg border-gray-300 border px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                                </div>
+
+                                <div class="relative">
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Customer Name</label>
+                                    <input type="text" id="entryCustomer" placeholder="Search customer..." required autocomplete="off" class="w-full rounded-lg border-gray-300 border px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                                    <div id="customerAutocomplete" class="autocomplete-items hidden"></div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Product</label>
+                                    <select id="entryProduct" required class="w-full rounded-lg border-gray-300 border px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition bg-white">
+                                        <option value="">Select Product</option>
+                                    </select>
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Quantity / Net Weight</label>
+                                    <input type="number" id="entryQty" placeholder="0.000" step="0.001" required class="w-full rounded-lg border-gray-300 border px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                                </div>
+
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Remarks (Optional)</label>
+                                    <textarea id="entryRemarks" rows="2" class="w-full rounded-lg border-gray-300 border px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition"></textarea>
+                                </div>
+
+                                <div class="flex space-x-3 pt-2">
+                                    <button type="submit" id="btnAddEntry" class="flex-1 bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium shadow-sm">
+                                        <i class="fa-solid fa-save mr-1"></i> Add Entry
+                                    </button>
+                                    <button type="button" onclick="clearEntryForm()" class="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50 transition">
+                                        Clear
+                                    </button>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+
+                <!-- Entries Table -->
+                <div class="lg:col-span-2">
+                    <div class="bg-white rounded-xl shadow-sm p-4 mb-6">
+                        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                            <input type="text" id="filterSearch" placeholder="Search DO or Customer..." onkeyup="renderEntriesTable()" class="border rounded-lg px-3 py-2 text-sm">
+                            <select id="filterProduct" onchange="renderEntriesTable()" class="border rounded-lg px-3 py-2 text-sm bg-white">
+                                <option value="">All Products</option>
+                            </select>
+                            <input type="date" id="filterDateFrom" onchange="renderEntriesTable()" class="border rounded-lg px-3 py-2 text-sm" placeholder="From">
+                            <input type="date" id="filterDateTo" onchange="renderEntriesTable()" class="border rounded-lg px-3 py-2 text-sm" placeholder="To">
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md overflow-hidden">
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-500 font-semibold">
+                                        <th class="px-6 py-4">Date</th>
+                                        <th class="px-6 py-4">DO Number</th>
+                                        <th class="px-6 py-4">Customer</th>
+                                        <th class="px-6 py-4">Product</th>
+                                        <th class="px-6 py-4 text-right">Quantity</th>
+                                        <th class="px-6 py-4">Remarks</th>
+                                        <th class="px-6 py-4 text-center">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="entriesTableBody" class="divide-y divide-gray-100 text-sm">
+                                </tbody>
+                            </table>
+                        </div>
+                        <div id="emptyState" class="hidden p-8 text-center text-gray-400">
+                            <i class="fa-solid fa-inbox text-4xl mb-2"></i>
+                            <p>No entries found</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- REPORTS SECTION -->
+        <section id="reports-section" class="max-w-7xl mx-auto hidden fade-in">
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div class="lg:col-span-1 space-y-6">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h2 class="text-lg font-bold text-gray-800 mb-4">Report Generator</h2>
+                        <div class="space-y-4 mb-6">
+                            <label class="block text-sm font-medium text-gray-700">Report Type</label>
+                            <select id="reportType" onchange="updateReportInputs()" class="w-full border rounded-lg px-3 py-2 bg-white">
+                                <option value="all">All Entries</option>
+                                <option value="do_range">DO Number Range</option>
+                                <option value="date_range">Date Range</option>
+                                <option value="product">Product Report</option>
+                                <option value="customer">Customer Report</option>
+                            </select>
+                        </div>
+                        <div id="reportInputs" class="space-y-4 mb-6"></div>
+                        <button onclick="generateReport()" class="w-full bg-indigo-600 text-white px-4 py-2 rounded-lg hover:bg-indigo-700 transition font-medium shadow-sm mb-3">
+                            <i class="fa-solid fa-filter mr-1"></i> Generate Report
+                        </button>
+                    </div>
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <h3 class="text-sm font-bold text-gray-500 uppercase mb-3">Export Options</h3>
+                        <div class="space-y-2">
+                            <button onclick="exportToCSV()" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                                <i class="fa-solid fa-file-csv mr-2 text-green-600"></i> Export to Excel (CSV)
+                            </button>
+                            <button onclick="printReport()" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                                <i class="fa-solid fa-print mr-2 text-gray-600"></i> Print Report
+                            </button>
+                            <button onclick="exportToPDF()" class="w-full flex items-center justify-center px-4 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                                <i class="fa-solid fa-file-pdf mr-2 text-red-600"></i> Export as PDF
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-3">
+                    <!-- PDF Optimized Container -->
+                    <div id="reportContainer" class="bg-white rounded-xl shadow-md p-6 min-h-[600px] pdf-container">
+                        <div id="reportHeader" class="border-b pb-4 mb-6 hidden">
+                            <h1 class="text-xl font-bold text-gray-900">Inventory Report</h1>
+                            <p class="text-sm text-gray-500 mt-1" id="reportMeta"></p>
+                        </div>
+                        <div class="flex justify-between items-center mb-4 no-print">
+                            <h2 class="text-lg font-bold text-gray-800">Report Preview</h2>
+                            <span class="text-sm text-gray-500" id="reportCount">0 records found</span>
+                        </div>
+                        <div class="overflow-x-auto mb-6">
+                            <table class="w-full text-left border-collapse pdf-table" id="reportTable">
+                                <thead>
+                                    <tr class="bg-gray-50 border-b border-gray-200 text-xs uppercase text-gray-600 font-semibold">
+                                        <th class="px-2 py-2">Date</th>
+                                        <th class="px-2 py-2">DO Number</th>
+                                        <th class="px-2 py-2">Customer</th>
+                                        <th class="px-2 py-2">Product</th>
+                                        <th class="px-2 py-2 text-right">Qty</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="reportTableBody" class="divide-y divide-gray-100 text-xs"></tbody>
+                            </table>
+                            <div id="reportEmpty" class="hidden p-8 text-center text-gray-400">
+                                <p>Generate a report to see data</p>
+                            </div>
+                        </div>
+                        <div id="reportSummary" class="bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
+                            <h3 class="text-base font-bold text-gray-800 mb-3 border-b pb-2">Summary</h3>
+                            <div class="grid grid-cols-2 gap-4 mb-4">
+                                <div>
+                                    <p class="text-xs text-gray-500">Total Entries</p>
+                                    <p class="text-xl font-bold text-gray-900" id="sumTotalEntries">0</p>
+                                </div>
+                                <div>
+                                    <p class="text-xs text-gray-500">Total Net Quantity</p>
+                                    <p class="text-xl font-bold text-gray-900" id="sumTotalQty">0</p>
+                                </div>
+                            </div>
+                            <div class="mb-4">
+                                <h4 class="font-semibold text-gray-700 mb-2 text-sm">Product Breakdown</h4>
+                                <div id="sumProductList" class="space-y-1 text-xs"></div>
+                            </div>
+                            <div id="sumCustomerSection">
+                                <h4 class="font-semibold text-gray-700 mb-2 text-sm">Customer Breakdown</h4>
+                                <div id="sumCustomerList" class="space-y-1 text-xs"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- DO RANGE REPORT SECTION -->
+        <section id="doRange-section" class="max-w-7xl mx-auto hidden fade-in">
+            <div class="mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-2">DO Range Serial Report</h2>
+                <p class="text-gray-600">Generate a serial-wise report for a specific DO number range with product summary</p>
+            </div>
+
+            <div class="grid grid-cols-1 lg:grid-cols-4 gap-8">
+                <div class="lg:col-span-1">
+                    <div class="bg-white rounded-xl shadow-md p-6 sticky top-0">
+                        <h3 class="text-lg font-bold text-gray-800 mb-4">Range Selection</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">From DO Number</label>
+                                <input type="text" id="doRangeFrom" placeholder="e.g. 101" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">To DO Number</label>
+                                <input type="text" id="doRangeTo" placeholder="e.g. 150" class="w-full border rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 outline-none transition">
+                            </div>
+                            <div class="flex items-center space-x-2 pt-2">
+                                <input type="checkbox" id="showEmptyDOs" class="rounded border-gray-300 text-blue-600 focus:ring-blue-500" checked>
+                                <label for="showEmptyDOs" class="text-sm text-gray-700">Show missing DO numbers</label>
+                            </div>
+                            <button onclick="generateDORangeReport()" class="w-full bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 transition font-medium shadow-sm">
+                                <i class="fa-solid fa-table-list mr-1"></i> Generate Serial Report
+                            </button>
+                            <button onclick="clearDORange()" class="w-full border border-gray-300 text-gray-700 px-4 py-2 rounded-lg hover:bg-gray-50 transition font-medium">
+                                Clear
+                            </button>
+                        </div>
+                        <div class="mt-6 pt-6 border-t border-gray-200">
+                            <h4 class="text-sm font-bold text-gray-500 uppercase mb-3">Export</h4>
+                            <div class="space-y-2">
+                                <button onclick="exportDORangeToCSV()" class="w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                                    <i class="fa-solid fa-file-csv mr-2 text-green-600"></i> Export CSV
+                                </button>
+                                <button onclick="printDORange()" class="w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                                    <i class="fa-solid fa-print mr-2 text-gray-600"></i> Print
+                                </button>
+                                <button onclick="exportDORangeToPDF()" class="w-full flex items-center justify-center px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition">
+                                    <i class="fa-solid fa-file-pdf mr-2 text-red-600"></i> Export PDF
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="lg:col-span-3">
+                    <div id="doRangeContainer" class="bg-white rounded-xl shadow-md p-6 min-h-[600px] pdf-container">
+                        <div id="doRangeHeader" class="border-b pb-4 mb-6 hidden">
+                            <h1 class="text-xl font-bold text-gray-900">DO Range Serial Report</h1>
+                            <p class="text-sm text-gray-500 mt-1" id="doRangeMeta"></p>
+                        </div>
+                        <div class="flex justify-between items-center mb-4 no-print">
+                            <h3 class="text-lg font-bold text-gray-800">Serial Report Preview</h3>
+                            <span class="text-sm text-gray-500" id="doRangeCount">0 records</span>
+                        </div>
+                        <div class="overflow-x-auto mb-6 border rounded-lg">
+                            <table class="w-full text-left border-collapse pdf-table" id="doRangeTable">
+                                <thead>
+                                    <tr class="bg-gray-100 border-b-2 border-gray-300 text-xs uppercase text-gray-600 font-bold">
+                                        <th class="px-2 py-2 w-20">DO No.</th>
+                                        <th class="px-2 py-2">Customer Name</th>
+                                        <th class="px-2 py-2">Product</th>
+                                        <th class="px-2 py-2 text-right w-24">Net Wt</th>
+                                        <th class="px-2 py-2 w-20">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="doRangeTableBody" class="divide-y divide-gray-200 text-xs"></tbody>
+                            </table>
+                            <div id="doRangeEmpty" class="p-8 text-center text-gray-400">
+                                <i class="fa-solid fa-arrow-up text-4xl mb-2"></i>
+                                <p>Enter DO range and click Generate</p>
+                            </div>
+                        </div>
+                        <div id="doRangeSummary" class="bg-gray-50 rounded-lg p-4 border border-gray-200 hidden">
+                            <h3 class="text-base font-bold text-gray-800 mb-3 border-b pb-2">Product Summary</h3>
+                            <div class="grid grid-cols-3 gap-4 mb-4">
+                                <div class="bg-white p-3 rounded-lg shadow-sm">
+                                    <p class="text-xs text-gray-500 uppercase">Total DOs</p>
+                                    <p class="text-lg font-bold text-blue-600" id="doSumTotalRange">0</p>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-sm">
+                                    <p class="text-xs text-gray-500 uppercase">Filled</p>
+                                    <p class="text-lg font-bold text-emerald-600" id="doSumFilled">0</p>
+                                </div>
+                                <div class="bg-white p-3 rounded-lg shadow-sm">
+                                    <p class="text-xs text-gray-500 uppercase">Missing</p>
+                                    <p class="text-lg font-bold text-red-600" id="doSumMissing">0</p>
+                                </div>
+                            </div>
+                            <h4 class="font-semibold text-gray-700 mb-2 text-sm">Product Wise Total Net Weight</h4>
+                            <div class="bg-white rounded-lg shadow-sm overflow-hidden">
+                                <table class="w-full text-xs">
+                                    <thead class="bg-gray-100 text-gray-600">
+                                        <tr>
+                                            <th class="px-2 py-2 text-left">Product</th>
+                                            <th class="px-2 py-2 text-right">Total Qty</th>
+                                            <th class="px-2 py-2 text-right">%</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="doRangeProductSummaryBody" class="divide-y divide-gray-100"></tbody>
+                                    <tfoot class="bg-gray-50 font-bold text-gray-800">
+                                        <tr>
+                                            <td class="px-2 py-2">Grand Total</td>
+                                            <td class="px-2 py-2 text-right font-mono" id="doSumGrandTotal">0</td>
+                                            <td class="px-2 py-2 text-right">100%</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- SETTINGS SECTION -->
+        <section id="settings-section" class="max-w-3xl mx-auto hidden fade-in">
+            <!-- Dark Mode Card -->
+            <div class="bg-white rounded-xl shadow-md p-6 mb-6">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Appearance</h2>
+                <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                    <div class="flex items-center space-x-3">
+                        <div class="p-2 bg-gray-100 rounded-lg text-gray-600">
+                            <i class="fa-solid fa-moon text-lg"></i>
+                        </div>
+                        <div>
+                            <p class="font-medium text-gray-800">Dark Mode</p>
+                            <p class="text-sm text-gray-500">Switch to dark theme for better night viewing</p>
+                        </div>
+                    </div>
+                    <label class="toggle-switch">
+                        <input type="checkbox" id="darkModeToggle" onchange="toggleDarkMode(this.checked)">
+                        <span class="toggle-slider"></span>
+                    </label>
+                </div>
+            </div>
+
+            <div class="bg-white rounded-xl shadow-md p-8">
+                <h2 class="text-2xl font-bold text-gray-800 mb-6">Product Management</h2>
+                <div class="flex gap-2 mb-6">
+                    <input type="text" id="newProductName" placeholder="New Product Name" class="flex-1 border rounded-lg px-4 py-2">
+                    <button onclick="addProduct()" class="bg-blue-600 text-white px-6 py-2 rounded-lg hover:bg-blue-700 transition">
+                        <i class="fa-solid fa-plus mr-1"></i> Add
+                    </button>
+                </div>
+                <div class="overflow-hidden rounded-lg border border-gray-200">
+                    <table class="w-full text-left">
+                        <thead class="bg-gray-50">
+                            <tr>
+                                <th class="px-6 py-3 text-sm font-semibold text-gray-600">Product Name</th>
+                                <th class="px-6 py-3 text-sm font-semibold text-gray-600 text-right">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="productsTableBody" class="divide-y divide-gray-100"></tbody>
+                    </table>
+                </div>
+                <div class="mt-8 p-4 bg-yellow-50 rounded-lg border border-yellow-100 text-sm text-yellow-800">
+                    <p><i class="fa-solid fa-triangle-exclamation mr-1"></i> <strong>Note:</strong> Deleting a product will not delete historical entries, but the product will no longer be available for new entries.</p>
+                </div>
+                <div class="mt-8 pt-6 border-t">
+                    <h3 class="text-lg font-bold text-gray-800 mb-4">Data Management</h3>
+                    <button onclick="clearAllData()" class="text-red-600 hover:text-red-800 font-medium text-sm">
+                        <i class="fa-solid fa-trash-can mr-1"></i> Clear All Application Data
+                    </button>
+                </div>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- JAVASCRIPT LOGIC -->
+    <script>
+        // --- STATE MANAGEMENT ---
+        const STORAGE_KEYS = {
+            ENTRIES: 'inv_entries',
+            PRODUCTS: 'inv_products',
+            CUSTOMERS: 'inv_customers'
+        };
+
+        let appData = {
+            entries: [],
+            products: ['Product A', 'Product B', 'Product C'],
+            customers: []
+        };
+
+        let currentReportData = [];
+        let currentDORangeData = [];
+        let currentMissingDOList = [];
+
+        // --- INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            loadData();
+            setupAutocomplete();
+            document.getElementById('entryDate').valueAsDate = new Date();
+            renderProductsDropdown();
+            renderEntriesTable();
+            updateDashboard();
+            renderProductsSettings();
+            updateReportInputs();
+
+            // Load dark mode preference
+            const darkPref = localStorage.getItem('inv_dark_mode') === 'true';
+            if (darkPref) {
+                document.body.classList.add('dark-mode');
+                document.getElementById('darkModeToggle').checked = true;
+            }
+        });
+
+        function toggleDarkMode(enabled) {
+            document.body.classList.toggle('dark-mode', enabled);
+            localStorage.setItem('inv_dark_mode', enabled);
+        }
+
+        // --- DATA PERSISTENCE ---
+        function loadData() {
+            const entries = localStorage.getItem(STORAGE_KEYS.ENTRIES);
+            const products = localStorage.getItem(STORAGE_KEYS.PRODUCTS);
+            const customers = localStorage.getItem(STORAGE_KEYS.CUSTOMERS);
+
+            if (entries) appData.entries = JSON.parse(entries);
+            if (products) appData.products = JSON.parse(products);
+            if (customers) appData.customers = JSON.parse(customers);
+        }
+
+        function saveData() {
+            localStorage.setItem(STORAGE_KEYS.ENTRIES, JSON.stringify(appData.entries));
+            localStorage.setItem(STORAGE_KEYS.PRODUCTS, JSON.stringify(appData.products));
+            localStorage.setItem(STORAGE_KEYS.CUSTOMERS, JSON.stringify(appData.customers));
+        }
+
+        function clearAllData() {
+            if(confirm('Are you sure? This will delete ALL entries, products, and customers permanently.')) {
+                localStorage.removeItem(STORAGE_KEYS.ENTRIES);
+                localStorage.removeItem(STORAGE_KEYS.PRODUCTS);
+                localStorage.removeItem(STORAGE_KEYS.CUSTOMERS);
+                location.reload();
+            }
+        }
+
+        // --- NAVIGATION ---
+        function switchTab(tabName) {
+            document.getElementById('dashboard-section').classList.add('hidden');
+            document.getElementById('entry-section').classList.add('hidden');
+            document.getElementById('reports-section').classList.add('hidden');
+            document.getElementById('doRange-section').classList.add('hidden');
+            document.getElementById('settings-section').classList.add('hidden');
+            
+            document.querySelectorAll('.nav-btn').forEach(btn => {
+                btn.classList.remove('text-blue-600', 'bg-blue-50');
+                btn.classList.add('text-gray-600');
+            });
+
+            document.getElementById(`${tabName}-section`).classList.remove('hidden');
+            
+            const activeBtn = document.getElementById(`nav-${tabName}`);
+            activeBtn.classList.remove('text-gray-600');
+            activeBtn.classList.add('text-blue-600', 'bg-blue-50');
+
+            if (tabName === 'dashboard') updateDashboard();
+            if (tabName === 'settings') renderProductsSettings();
+        }
+
+        // --- MISSING DO FINDER ---
+        function openMissingDOModal() {
+            document.getElementById('missingDOModal').classList.remove('hidden');
+            document.body.style.overflow = 'hidden';
+        }
+
+        function closeMissingDOModal() {
+            document.getElementById('missingDOModal').classList.add('hidden');
+            document.body.style.overflow = '';
+        }
+
+        function findMissingDOs() {
+            const fromStr = document.getElementById('missingDOFrom').value.trim();
+            const toStr = document.getElementById('missingDOTo').value.trim();
+
+            if (!fromStr || !toStr) {
+                alert('Please enter both From and To DO numbers');
+                return;
+            }
+
+            const fromNum = parseInt(fromStr.replace(/\D/g, ''));
+            const toNum = parseInt(toStr.replace(/\D/g, ''));
+            
+            if (isNaN(fromNum) || isNaN(toNum)) {
+                alert('Invalid DO number format');
+                return;
+            }
+
+            if (fromNum > toNum) {
+                alert('From DO must be less than or equal to To DO');
+                return;
+            }
+
+            const existingDOs = new Set();
+            appData.entries.forEach(e => {
+                const num = parseInt(e.doNum.replace(/\D/g, ''));
+                if (!isNaN(num)) existingDOs.add(num);
+            });
+
+            const missing = [];
+            for (let i = fromNum; i <= toNum; i++) {
+                if (!existingDOs.has(i)) {
+                    missing.push(i);
+                }
+            }
+
+            currentMissingDOList = missing;
+
+            document.getElementById('missingDOEmpty').classList.add('hidden');
+            document.getElementById('missingDOResults').classList.remove('hidden');
+
+            const listContainer = document.getElementById('missingDOList');
+            listContainer.innerHTML = '';
+
+            if (missing.length === 0) {
+                listContainer.innerHTML = '<span class="text-emerald-600 font-medium"><i class="fa-solid fa-check-circle mr-1"></i> No missing DO numbers in this range!</span>';
+            } else {
+                missing.forEach(num => {
+                    const badge = document.createElement('span');
+                    badge.className = 'inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-red-100 text-red-800';
+                    badge.textContent = num;
+                    listContainer.appendChild(badge);
+                });
+            }
+
+            const totalInRange = toNum - fromNum + 1;
+            const found = totalInRange - missing.length;
+
+            document.getElementById('missingDOCount').textContent = `${missing.length} missing`;
+            document.getElementById('missingDOTotal').textContent = totalInRange;
+            document.getElementById('missingDOFound').textContent = found;
+            document.getElementById('missingDOMissing').textContent = missing.length;
+        }
+
+        function exportMissingDOToCSV() {
+            if (currentMissingDOList.length === 0) {
+                alert('No missing DO numbers to export');
+                return;
+            }
+
+            const from = document.getElementById('missingDOFrom').value;
+            const to = document.getElementById('missingDOTo').value;
+
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Missing DO Numbers in range " + from + " to " + to + "\n";
+            csvContent += "DO Number\n";
+            
+            currentMissingDOList.forEach(num => {
+                csvContent += num + "\n";
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `Missing_DOs_${from}_to_${to}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        document.getElementById('missingDOModal').addEventListener('click', function(e) {
+            if (e.target === this) closeMissingDOModal();
+        });
+
+        // --- PRODUCT MANAGEMENT ---
+        function renderProductsDropdown() {
+            const selects = [document.getElementById('entryProduct'), document.getElementById('filterProduct')];
+            selects.forEach(select => {
+                const currentVal = select.value;
+                select.innerHTML = '<option value="">Select Product</option>';
+                appData.products.forEach(prod => {
+                    const option = document.createElement('option');
+                    option.value = prod;
+                    option.textContent = prod;
+                    select.appendChild(option);
+                });
+                if (select.id === 'filterProduct') select.value = currentVal;
+            });
+        }
+
+        function renderProductsSettings() {
+            const tbody = document.getElementById('productsTableBody');
+            tbody.innerHTML = '';
+            appData.products.forEach((prod, index) => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50';
+                tr.innerHTML = `
+                    <td class="px-6 py-4 font-medium text-gray-800">${prod}</td>
+                    <td class="px-6 py-4 text-right">
+                        <button onclick="deleteProduct(${index})" class="text-red-600 hover:text-red-800 text-sm font-medium">Delete</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function addProduct() {
+            const input = document.getElementById('newProductName');
+            const val = input.value.trim();
+            if (val && !appData.products.includes(val)) {
+                appData.products.push(val);
+                saveData();
+                renderProductsSettings();
+                renderProductsDropdown();
+                input.value = '';
+            } else if (appData.products.includes(val)) {
+                alert('Product already exists');
+            }
+        }
+
+        function deleteProduct(index) {
+            if (confirm('Delete this product?')) {
+                appData.products.splice(index, 1);
+                saveData();
+                renderProductsSettings();
+                renderProductsDropdown();
+            }
+        }
+
+        // --- ENTRY FORM & TABLE ---
+        function setupAutocomplete() {
+            const input = document.getElementById('entryCustomer');
+            const list = document.getElementById('customerAutocomplete');
+
+            input.addEventListener('input', function(e) {
+                const val = this.value;
+                list.innerHTML = '';
+                if (!val) {
+                    list.classList.add('hidden');
+                    return;
+                }
+
+                const matches = appData.customers.filter(c => c.toLowerCase().includes(val.toLowerCase()));
+                if (matches.length > 0) {
+                    list.classList.remove('hidden');
+                    matches.forEach(match => {
+                        const div = document.createElement('div');
+                        div.innerHTML = `<strong>${match.substr(0, val.length)}</strong>${match.substr(val.length)}`;
+                        div.addEventListener('click', function() {
+                            input.value = match;
+                            list.classList.add('hidden');
+                        });
+                        list.appendChild(div);
+                    });
+                } else {
+                    list.classList.add('hidden');
+                }
+            });
+
+            document.addEventListener('click', function(e) {
+                if (e.target !== input) list.classList.add('hidden');
+            });
+        }
+
+        function handleEntrySubmit(e) {
+            e.preventDefault();
+            
+            const id = document.getElementById('entryId').value;
+            const date = document.getElementById('entryDate').value;
+            const doNum = document.getElementById('entryDO').value.trim();
+            const customer = document.getElementById('entryCustomer').value.trim();
+            const product = document.getElementById('entryProduct').value;
+            const qty = parseFloat(document.getElementById('entryQty').value);
+            const remarks = document.getElementById('entryRemarks').value;
+
+            if (!doNum || !customer || !product) {
+                alert('Please fill all required fields');
+                return;
+            }
+
+            if (!appData.customers.includes(customer)) {
+                appData.customers.push(customer);
+            }
+
+            const entry = {
+                id: id || Date.now().toString(),
+                date,
+                doNum,
+                customer,
+                product,
+                qty,
+                remarks
+            };
+
+            if (id) {
+                const idx = appData.entries.findIndex(en => en.id === id);
+                if (idx > -1) appData.entries[idx] = entry;
+            } else {
+                appData.entries.unshift(entry);
+            }
+
+            saveData();
+            clearEntryForm();
+            renderEntriesTable();
+            updateDashboard();
+            
+            document.getElementById('btnAddEntry').innerHTML = '<i class="fa-solid fa-save mr-1"></i> Add Entry';
+        }
+
+        function clearEntryForm() {
+            document.getElementById('entryForm').reset();
+            document.getElementById('entryId').value = '';
+            document.getElementById('entryDate').valueAsDate = new Date();
+            document.getElementById('btnAddEntry').innerHTML = '<i class="fa-solid fa-save mr-1"></i> Add Entry';
+        }
+
+        function editEntry(id) {
+            const entry = appData.entries.find(e => e.id === id);
+            if (!entry) return;
+
+            document.getElementById('entryId').value = entry.id;
+            document.getElementById('entryDate').value = entry.date;
+            document.getElementById('entryDO').value = entry.doNum;
+            document.getElementById('entryCustomer').value = entry.customer;
+            document.getElementById('entryProduct').value = entry.product;
+            document.getElementById('entryQty').value = entry.qty;
+            document.getElementById('entryRemarks').value = entry.remarks;
+
+            document.getElementById('btnAddEntry').innerHTML = '<i class="fa-solid fa-rotate mr-1"></i> Update Entry';
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        function deleteEntry(id) {
+            if (confirm('Are you sure you want to delete this entry?')) {
+                appData.entries = appData.entries.filter(e => e.id !== id);
+                saveData();
+                renderEntriesTable();
+                updateDashboard();
+            }
+        }
+
+        function renderEntriesTable() {
+            const search = document.getElementById('filterSearch').value.toLowerCase();
+            const prodFilter = document.getElementById('filterProduct').value;
+            const dateFrom = document.getElementById('filterDateFrom').value;
+            const dateTo = document.getElementById('filterDateTo').value;
+
+            const filtered = appData.entries.filter(entry => {
+                const matchSearch = entry.doNum.toLowerCase().includes(search) || entry.customer.toLowerCase().includes(search);
+                const matchProd = !prodFilter || entry.product === prodFilter;
+                const matchDate = (!dateFrom || entry.date >= dateFrom) && (!dateTo || entry.date <= dateTo);
+                return matchSearch && matchProd && matchDate;
+            });
+
+            const tbody = document.getElementById('entriesTableBody');
+            tbody.innerHTML = '';
+
+            if (filtered.length === 0) {
+                document.getElementById('emptyState').classList.remove('hidden');
+            } else {
+                document.getElementById('emptyState').classList.add('hidden');
+                filtered.forEach(entry => {
+                    const tr = document.createElement('tr');
+                    tr.className = 'hover:bg-gray-50 transition';
+                    tr.innerHTML = `
+                        <td class="px-6 py-4 whitespace-nowrap text-gray-600">${formatDate(entry.date)}</td>
+                        <td class="px-6 py-4 font-medium text-gray-900">${entry.doNum}</td>
+                        <td class="px-6 py-4 text-gray-700">${entry.customer}</td>
+                        <td class="px-6 py-4"><span class="px-2 py-1 bg-blue-50 text-blue-700 rounded-full text-xs font-medium">${entry.product}</span></td>
+                        <td class="px-6 py-4 text-right font-mono text-gray-700">${formatQty(entry.qty)}</td>
+                        <td class="px-6 py-4 text-gray-500 text-xs max-w-xs truncate">${entry.remarks || '-'}</td>
+                        <td class="px-6 py-4 text-center whitespace-nowrap">
+                            <button onclick="editEntry('${entry.id}')" class="text-blue-600 hover:text-blue-800 mr-3" title="Edit"><i class="fa-solid fa-pen"></i></button>
+                            <button onclick="deleteEntry('${entry.id}')" class="text-red-600 hover:text-red-800" title="Delete"><i class="fa-solid fa-trash"></i></button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+        }
+
+        // --- DASHBOARD & CHARTS ---
+        let charts = {};
+
+        function updateDashboard() {
+            const totalEntries = appData.entries.length;
+            const totalQty = appData.entries.reduce((sum, e) => sum + e.qty, 0);
+            
+            const today = new Date().toISOString().split('T')[0];
+            const todayEntries = appData.entries.filter(e => e.date === today);
+            const todayCount = todayEntries.length;
+            const todayQty = todayEntries.reduce((sum, e) => sum + e.qty, 0);
+
+            const uniqueCustomers = new Set(appData.entries.map(e => e.customer)).size;
+            const uniqueProducts = new Set(appData.entries.map(e => e.product)).size;
+
+            document.getElementById('dash-total-entries').textContent = totalEntries;
+            document.getElementById('dash-total-qty').textContent = formatQty(totalQty);
+            document.getElementById('dash-today-entries').textContent = todayCount;
+            document.getElementById('dash-today-qty').textContent = formatQty(todayQty);
+            document.getElementById('dash-total-customers').textContent = uniqueCustomers;
+            document.getElementById('dash-total-products').textContent = uniqueProducts;
+
+            updateCharts();
+        }
+
+        function updateCharts() {
+            const prodMap = {};
+            appData.entries.forEach(e => {
+                prodMap[e.product] = (prodMap[e.product] || 0) + e.qty;
+            });
+
+            const custMap = {};
+            appData.entries.forEach(e => {
+                custMap[e.customer] = (custMap[e.customer] || 0) + e.qty;
+            });
+
+            const monthMap = {};
+            appData.entries.forEach(e => {
+                const month = e.date.substring(0, 7);
+                monthMap[month] = (monthMap[month] || 0) + 1;
+            });
+            const sortedMonths = Object.keys(monthMap).sort();
+
+            if (charts.product) charts.product.destroy();
+            if (charts.customer) charts.customer.destroy();
+            if (charts.monthly) charts.monthly.destroy();
+
+            const ctxProd = document.getElementById('chartProduct').getContext('2d');
+            charts.product = new Chart(ctxProd, {
+                type: 'doughnut',
+                data: {
+                    labels: Object.keys(prodMap),
+                    datasets: [{
+                        data: Object.values(prodMap),
+                        backgroundColor: ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899']
+                    }]
+                },
+                options: { responsive: true, plugins: { legend: { position: 'bottom' } } }
+            });
+
+            const sortedCust = Object.entries(custMap).sort((a,b) => b[1] - a[1]).slice(0, 5);
+            const ctxCust = document.getElementById('chartCustomer').getContext('2d');
+            charts.customer = new Chart(ctxCust, {
+                type: 'bar',
+                data: {
+                    labels: sortedCust.map(i => i[0]),
+                    datasets: [{
+                        label: 'Quantity',
+                        data: sortedCust.map(i => i[1]),
+                        backgroundColor: '#3b82f6',
+                        borderRadius: 4
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+
+            const ctxMonth = document.getElementById('chartMonthly').getContext('2d');
+            charts.monthly = new Chart(ctxMonth, {
+                type: 'line',
+                data: {
+                    labels: sortedMonths,
+                    datasets: [{
+                        label: 'Entries',
+                        data: sortedMonths.map(m => monthMap[m]),
+                        borderColor: '#8b5cf6',
+                        backgroundColor: 'rgba(139, 92, 246, 0.1)',
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: { responsive: true, scales: { y: { beginAtZero: true } } }
+            });
+        }
+
+        // --- REPORTING ENGINE ---
+        function updateReportInputs() {
+            const type = document.getElementById('reportType').value;
+            const container = document.getElementById('reportInputs');
+            container.innerHTML = '';
+
+            if (type === 'do_range') {
+                container.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">From DO</label>
+                        <input type="text" id="r_do_from" class="w-full border rounded px-2 py-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">To DO</label>
+                        <input type="text" id="r_do_to" class="w-full border rounded px-2 py-1 text-sm">
+                    </div>
+                `;
+            } else if (type === 'date_range') {
+                container.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">From Date</label>
+                        <input type="date" id="r_date_from" class="w-full border rounded px-2 py-1 text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">To Date</label>
+                        <input type="date" id="r_date_to" class="w-full border rounded px-2 py-1 text-sm">
+                    </div>
+                `;
+            } else if (type === 'product') {
+                container.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Select Product</label>
+                        <select id="r_product" class="w-full border rounded px-2 py-1 text-sm bg-white">
+                            ${appData.products.map(p => `<option value="${p}">${p}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            } else if (type === 'customer') {
+                container.innerHTML = `
+                    <div>
+                        <label class="block text-xs font-medium text-gray-500 mb-1">Select Customer</label>
+                        <select id="r_customer" class="w-full border rounded px-2 py-1 text-sm bg-white">
+                            ${appData.customers.map(c => `<option value="${c}">${c}</option>`).join('')}
+                        </select>
+                    </div>
+                `;
+            }
+        }
+
+        function generateReport() {
+            const type = document.getElementById('reportType').value;
+            let filtered = [...appData.entries];
+            let metaText = "All Records";
+
+            if (type === 'do_range') {
+                const from = document.getElementById('r_do_from').value;
+                const to = document.getElementById('r_do_to').value;
+                if(from && to) {
+                    filtered = filtered.filter(e => e.doNum >= from && e.doNum <= to);
+                    metaText = `DO Range: ${from} to ${to}`;
+                }
+            } else if (type === 'date_range') {
+                const from = document.getElementById('r_date_from').value;
+                const to = document.getElementById('r_date_to').value;
+                if(from && to) {
+                    filtered = filtered.filter(e => e.date >= from && e.date <= to);
+                    metaText = `Date Range: ${formatDate(from)} to ${formatDate(to)}`;
+                }
+            } else if (type === 'product') {
+                const val = document.getElementById('r_product').value;
+                filtered = filtered.filter(e => e.product === val);
+                metaText = `Product: ${val}`;
+            } else if (type === 'customer') {
+                const val = document.getElementById('r_customer').value;
+                filtered = filtered.filter(e => e.customer === val);
+                metaText = `Customer: ${val}`;
+            }
+
+            currentReportData = filtered;
+            
+            const tbody = document.getElementById('reportTableBody');
+            tbody.innerHTML = '';
+            
+            if (filtered.length === 0) {
+                document.getElementById('reportEmpty').classList.remove('hidden');
+                document.getElementById('reportTable').classList.add('hidden');
+                document.getElementById('reportSummary').classList.add('hidden');
+            } else {
+                document.getElementById('reportEmpty').classList.add('hidden');
+                document.getElementById('reportTable').classList.remove('hidden');
+                document.getElementById('reportSummary').classList.remove('hidden');
+                
+                filtered.forEach(e => {
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td class="px-2 py-2 border-b">${formatDate(e.date)}</td>
+                        <td class="px-2 py-2 border-b font-medium">${e.doNum}</td>
+                        <td class="px-2 py-2 border-b">${e.customer}</td>
+                        <td class="px-2 py-2 border-b">${e.product}</td>
+                        <td class="px-2 py-2 border-b text-right font-mono">${formatQty(e.qty)}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            document.getElementById('reportCount').textContent = `${filtered.length} records found`;
+            document.getElementById('reportMeta').textContent = metaText + ` | Generated: ${new Date().toLocaleString()}`;
+
+            generateSummary(filtered);
+        }
+
+        function generateSummary(data) {
+            const totalEntries = data.length;
+            const totalQty = data.reduce((sum, e) => sum + e.qty, 0);
+
+            document.getElementById('sumTotalEntries').textContent = totalEntries;
+            document.getElementById('sumTotalQty').textContent = formatQty(totalQty);
+
+            const prodMap = {};
+            data.forEach(e => prodMap[e.product] = (prodMap[e.product] || 0) + e.qty);
+            
+            const prodList = document.getElementById('sumProductList');
+            prodList.innerHTML = '';
+            Object.entries(prodMap).sort((a,b) => b[1] - a[1]).forEach(([prod, qty]) => {
+                prodList.innerHTML += `
+                    <div class="flex justify-between py-1 border-b border-gray-100 last:border-0">
+                        <span class="text-gray-600">${prod}</span>
+                        <span class="font-medium font-mono">${formatQty(qty)}</span>
+                    </div>
+                `;
+            });
+
+            const type = document.getElementById('reportType').value;
+            const custSection = document.getElementById('sumCustomerSection');
+            
+            if (type !== 'customer') {
+                custSection.classList.remove('hidden');
+                const custMap = {};
+                data.forEach(e => custMap[e.customer] = (custMap[e.customer] || 0) + e.qty);
+                
+                const custList = document.getElementById('sumCustomerList');
+                custList.innerHTML = '';
+                Object.entries(custMap).sort((a,b) => b[1] - a[1]).forEach(([cust, qty]) => {
+                    custList.innerHTML += `
+                        <div class="flex justify-between py-1 border-b border-gray-100 last:border-0">
+                            <span class="text-gray-600">${cust}</span>
+                            <span class="font-medium font-mono">${formatQty(qty)}</span>
+                        </div>
+                    `;
+                });
+            } else {
+                custSection.classList.add('hidden');
+            }
+        }
+
+        // --- DO RANGE REPORT SECTION ---
+        function generateDORangeReport() {
+            const fromStr = document.getElementById('doRangeFrom').value.trim();
+            const toStr = document.getElementById('doRangeTo').value.trim();
+            const showEmpty = document.getElementById('showEmptyDOs').checked;
+
+            if (!fromStr || !toStr) {
+                alert('Please enter both From and To DO numbers');
+                return;
+            }
+
+            const fromNum = parseInt(fromStr.replace(/\D/g, ''));
+            const toNum = parseInt(toStr.replace(/\D/g, ''));
+            
+            if (isNaN(fromNum) || isNaN(toNum)) {
+                alert('Invalid DO number format');
+                return;
+            }
+
+            if (fromNum > toNum) {
+                alert('From DO must be less than or equal to To DO');
+                return;
+            }
+
+            const prefixMatch = fromStr.match(/^[^\d]*/);
+            const prefix = prefixMatch ? prefixMatch[0] : '';
+            const fromPadding = fromStr.match(/\d+/)[0].length;
+
+            const rangeData = [];
+            const productSummary = {};
+            let filledCount = 0;
+            let missingCount = 0;
+            let grandTotal = 0;
+
+            for (let i = fromNum; i <= toNum; i++) {
+                const doNum = prefix + String(i).padStart(fromPadding, '0');
+                
+                // ALL entries for this DO number
+                const entries = appData.entries.filter(e => e.doNum === doNum || e.doNum.replace(/\D/g, '') === String(i));
+                
+                if (entries.length > 0) {
+                    entries.forEach((entry, idx) => {
+                        rangeData.push({
+                            doNum: idx === 0 ? entry.doNum : '',
+                            doNumFull: entry.doNum,
+                            customer: entry.customer,
+                            product: entry.product,
+                            qty: entry.qty,
+                            status: 'filled',
+                            date: entry.date,
+                            isFirstOfDO: idx === 0,
+                            totalInDO: entries.length
+                        });
+                        productSummary[entry.product] = (productSummary[entry.product] || 0) + entry.qty;
+                        grandTotal += entry.qty;
+                    });
+                    filledCount++;
+                } else if (showEmpty) {
+                    rangeData.push({
+                        doNum: doNum,
+                        doNumFull: doNum,
+                        customer: '-',
+                        product: '-',
+                        qty: 0,
+                        status: 'missing',
+                        date: '-',
+                        isFirstOfDO: true,
+                        totalInDO: 1
+                    });
+                    missingCount++;
+                }
+            }
+
+            currentDORangeData = rangeData;
+            
+            const tbody = document.getElementById('doRangeTableBody');
+            tbody.innerHTML = '';
+            
+            if (rangeData.length === 0) {
+                document.getElementById('doRangeEmpty').classList.remove('hidden');
+                document.getElementById('doRangeTable').classList.add('hidden');
+                document.getElementById('doRangeSummary').classList.add('hidden');
+            } else {
+                document.getElementById('doRangeEmpty').classList.add('hidden');
+                document.getElementById('doRangeTable').classList.remove('hidden');
+                document.getElementById('doRangeSummary').classList.remove('hidden');
+                
+                rangeData.forEach(row => {
+                    const tr = document.createElement('tr');
+                    // Extra row (duplicate DO) ko light blue border se highlight karo
+                    const extraClass = (!row.isFirstOfDO) ? 'bg-blue-50 border-l-2 border-blue-300' : '';
+                    tr.className = `do-range-row ${row.status === 'missing' ? 'do-missing' : ''} ${extraClass}`;
+                    
+                    // DO number cell: pehli row mein dikhao, baaki mein arrow
+                    const doCell = row.isFirstOfDO
+                        ? `<td class="px-2 py-2 font-mono font-medium">${row.doNumFull || row.doNum}${row.totalInDO > 1 ? ' <span class="text-blue-500 text-xs">('+row.totalInDO+')</span>' : ''}</td>`
+                        : `<td class="px-2 py-2 text-blue-400 text-xs pl-4">↳ same</td>`;
+
+                    tr.innerHTML = doCell + `
+                        <td class="px-2 py-2 ${row.status === 'missing' ? 'italic' : ''}">${row.customer}</td>
+                        <td class="px-2 py-2 ${row.status === 'missing' ? 'italic' : ''}">${row.product}</td>
+                        <td class="px-2 py-2 text-right font-mono ${row.status === 'missing' ? '' : 'font-semibold text-gray-800'}">
+                            ${row.qty > 0 ? formatQty(row.qty) : '-'}
+                        </td>
+                        <td class="px-2 py-2">
+                            ${row.status === 'filled' 
+                                ? '<span class="px-2 py-1 bg-green-100 text-green-700 rounded-full text-xs font-medium">Filled</span>' 
+                                : '<span class="px-2 py-1 bg-red-100 text-red-700 rounded-full text-xs font-medium">Missing</span>'}
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            const totalRange = toNum - fromNum + 1;
+            document.getElementById('doRangeCount').textContent = `${filledCount} filled / ${totalRange} total`;
+            document.getElementById('doRangeMeta').textContent = `DO Range: ${fromStr} to ${toStr} | Generated: ${new Date().toLocaleString()}`;
+
+            document.getElementById('doSumTotalRange').textContent = totalRange;
+            document.getElementById('doSumFilled').textContent = filledCount;
+            document.getElementById('doSumMissing').textContent = missingCount;
+            document.getElementById('doSumGrandTotal').textContent = formatQty(grandTotal);
+
+            const prodTbody = document.getElementById('doRangeProductSummaryBody');
+            prodTbody.innerHTML = '';
+            
+            const sortedProducts = Object.entries(productSummary).sort((a, b) => b[1] - a[1]);
+            sortedProducts.forEach(([product, qty]) => {
+                const percentage = grandTotal > 0 ? ((qty / grandTotal) * 100).toFixed(1) : 0;
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="px-2 py-2 font-medium text-gray-700">${product}</td>
+                    <td class="px-2 py-2 text-right font-mono">${formatQty(qty)}</td>
+                    <td class="px-2 py-2 text-right text-gray-500">${percentage}%</td>
+                `;
+                prodTbody.appendChild(tr);
+            });
+        }
+
+        function clearDORange() {
+            document.getElementById('doRangeFrom').value = '';
+            document.getElementById('doRangeTo').value = '';
+            document.getElementById('doRangeTableBody').innerHTML = '';
+            document.getElementById('doRangeProductSummaryBody').innerHTML = '';
+            document.getElementById('doRangeSummary').classList.add('hidden');
+            document.getElementById('doRangeEmpty').classList.remove('hidden');
+            document.getElementById('doRangeTable').classList.add('hidden');
+            document.getElementById('doRangeCount').textContent = '0 records';
+            currentDORangeData = [];
+        }
+
+        function exportDORangeToCSV() {
+            if (currentDORangeData.length === 0) return alert('No data to export');
+            
+            const from = document.getElementById('doRangeFrom').value;
+            const to = document.getElementById('doRangeTo').value;
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "DO Number,Customer Name,Product,Net Weight,Status\n";
+            
+            currentDORangeData.forEach(row => {
+                csvContent += `${row.doNumFull || row.doNum},${row.customer},${row.product},${row.qty},${row.status}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `DO_Range_Report_${from}_to_${to}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function printDORange() {
+            if (currentDORangeData.length === 0) return alert('No data to print');
+            
+            document.getElementById('doRangeHeader').classList.remove('hidden');
+            document.getElementById('doRangeHeader').classList.add('print-only');
+            
+            window.print();
+            
+            document.getElementById('doRangeHeader').classList.add('hidden');
+            document.getElementById('doRangeHeader').classList.remove('print-only');
+        }
+
+        // FIXED PDF EXPORT - Better scaling for narrow width
+        async function exportDORangeToPDF() {
+            if (currentDORangeData.length === 0) return alert('No data to export');
+            
+            const { jsPDF } = window.jspdf;
+            
+            const header = document.getElementById('doRangeHeader');
+            header.classList.remove('hidden');
+
+            // Temporarily narrow the container for PDF capture
+            const container = document.getElementById('doRangeContainer');
+            const originalClasses = container.className;
+            container.className = 'bg-white p-4 pdf-container';
+            container.style.maxWidth = '700px';
+
+            try {
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const canvas = await html2canvas(container, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: 700,
+                    width: 700
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                
+                // A4 dimensions in mm (portrait)
+                const pdfWidth = 210;
+                const pdfHeight = 297;
+                const margin = 10;
+                const contentWidth = pdfWidth - (margin * 2); // 190mm
+                
+                // Calculate scale to fit width
+                const imgWidthPx = canvas.width;
+                const scale = contentWidth / (imgWidthPx * 0.264583); // Convert px to mm (1px = 0.264583mm)
+                
+                const imgWidth = imgWidthPx * 0.264583 * scale; // Should be ~190mm
+                const imgHeight = canvas.height * 0.264583 * scale;
+                
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                let heightLeft = imgHeight;
+                let position = margin;
+                let pageCount = 0;
+
+                pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+                heightLeft -= (pdfHeight - margin * 2);
+                pageCount++;
+
+                while (heightLeft > 0) {
+                    pdf.addPage();
+                    pageCount++;
+                    position = -(pdfHeight * (pageCount - 1)) + margin + (margin * (pageCount - 1));
+                    pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+                    heightLeft -= (pdfHeight - margin * 2);
+                }
+
+                const from = document.getElementById('doRangeFrom').value;
+                const to = document.getElementById('doRangeTo').value;
+                pdf.save(`DO_Range_Report_${from}_to_${to}.pdf`);
+            } catch (err) {
+                console.error(err);
+                alert('Error generating PDF: ' + err.message);
+            } finally {
+                header.classList.add('hidden');
+                // Restore original classes
+                container.className = originalClasses;
+                container.style.maxWidth = '';
+            }
+        }
+
+        // --- EXPORT FUNCTIONS (General Reports) ---
+        function exportToCSV() {
+            if (currentReportData.length === 0) return alert('No data to export');
+            
+            let csvContent = "data:text/csv;charset=utf-8,";
+            csvContent += "Date,DO Number,Customer,Product,Quantity\n";
+            
+            currentReportData.forEach(e => {
+                csvContent += `${e.date},${e.doNum},${e.customer},${e.product},${e.qty}\n`;
+            });
+
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", "report_export.csv");
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        function printReport() {
+            if (currentReportData.length === 0) return alert('No data to print');
+            
+            document.getElementById('reportHeader').classList.remove('hidden');
+            document.getElementById('reportHeader').classList.add('print-only');
+            
+            window.print();
+            
+            document.getElementById('reportHeader').classList.add('hidden');
+            document.getElementById('reportHeader').classList.remove('print-only');
+        }
+
+        // FIXED PDF EXPORT - Better scaling for narrow width
+        async function exportToPDF() {
+            if (currentReportData.length === 0) return alert('No data to export');
+            
+            const { jsPDF } = window.jspdf;
+            
+            const header = document.getElementById('reportHeader');
+            header.classList.remove('hidden');
+
+            // Temporarily narrow the container for PDF capture
+            const container = document.getElementById('reportContainer');
+            const originalClasses = container.className;
+            container.className = 'bg-white p-4 pdf-container';
+            container.style.maxWidth = '700px';
+
+            try {
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                const canvas = await html2canvas(container, {
+                    scale: 2,
+                    useCORS: true,
+                    logging: false,
+                    windowWidth: 700,
+                    width: 700
+                });
+
+                const imgData = canvas.toDataURL('image/png');
+                
+                // A4 dimensions in mm (portrait)
+                const pdfWidth = 210;
+                const pdfHeight = 297;
+                const margin = 10;
+                const contentWidth = pdfWidth - (margin * 2); // 190mm
+                
+                // Calculate scale to fit width
+                const imgWidthPx = canvas.width;
+                const scale = contentWidth / (imgWidthPx * 0.264583); // Convert px to mm
+                
+                const imgWidth = imgWidthPx * 0.264583 * scale; // Should be ~190mm
+                const imgHeight = canvas.height * 0.264583 * scale;
+                
+                const pdf = new jsPDF('p', 'mm', 'a4');
+                
+                let heightLeft = imgHeight;
+                let position = margin;
+                let pageCount = 0;
+
+                pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+                heightLeft -= (pdfHeight - margin * 2);
+                pageCount++;
+
+                while (heightLeft > 0) {
+                    pdf.addPage();
+                    pageCount++;
+                    position = -(pdfHeight * (pageCount - 1)) + margin + (margin * (pageCount - 1));
+                    pdf.addImage(imgData, 'PNG', margin, position, contentWidth, imgHeight);
+                    heightLeft -= (pdfHeight - margin * 2);
+                }
+
+                pdf.save('inventory_report.pdf');
+            } catch (err) {
+                console.error(err);
+                alert('Error generating PDF: ' + err.message);
+            } finally {
+                header.classList.add('hidden');
+                // Restore original classes
+                container.className = originalClasses;
+                container.style.maxWidth = '';
+            }
+        }
+
+        // --- UTILS ---
+        function formatDate(dateStr) {
+            if (!dateStr) return '';
+            const d = new Date(dateStr);
+            return d.toLocaleDateString('en-GB');
+        }
+
+        function formatQty(n) {
+            return parseFloat(n || 0).toLocaleString(undefined, { minimumFractionDigits: 3, maximumFractionDigits: 3 });
+        }
+    </script>
+</body>
+</html>
+
